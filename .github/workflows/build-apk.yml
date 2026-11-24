@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -27,6 +27,26 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Generate heavy asset packs (100MB+)
+        run: |
+          mkdir -p www/assets/data www/assets/audio www/assets/textures www/lib
+          # Download Three.js locally
+          curl -sL "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js" -o www/lib/three.module.min.js
+          # 8 x 14MB random packs = ~112MB (poorly compressible)
+          for i in 0 1 2 3 4 5 6 7; do
+            dd if=/dev/urandom of=www/assets/data/pack_$i.bin bs=1M count=14 status=none
+          done
+          # Extra audio/texture weight
+          for n in ambient combat ui wind footsteps; do
+            dd if=/dev/urandom of=www/assets/audio/$n.wav bs=1M count=2 status=none
+          done
+          for n in ground rock bark leaves water detail; do
+            dd if=/dev/urandom of=www/assets/textures/$n.png bs=1M count=1 status=none
+          done
+          echo "Asset size:"
+          du -sh www
+          du -sh www/assets/*
 
       - name: Add Android platform
         run: npx cap add android || true
@@ -50,6 +70,11 @@ jobs:
       - name: Build Debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
+
+      - name: Show APK size
+        run: |
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+          du -sh android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
