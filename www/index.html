@@ -1,202 +1,238 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Emberhold</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;touch-action:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#050403;font-family:system-ui,-apple-system,sans-serif;color:#f0e6d8}
-canvas{display:block;position:fixed;inset:0;z-index:0}
-#ui{position:fixed;inset:0;z-index:10;pointer-events:none}
-#ui>*{pointer-events:auto}
-#loading{position:fixed;inset:0;background:linear-gradient(180deg,#0c0907,#1a120c);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;transition:opacity .5s}
-#loading.hide{opacity:0;pointer-events:none}
-.logo-big{font-size:clamp(36px,9vw,64px);font-weight:900;letter-spacing:6px;background:linear-gradient(180deg,#ffd090,#e07020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(255,140,40,.45));margin-bottom:6px}
-.logo-sub{color:#8a7060;font-size:12px;letter-spacing:8px;text-transform:uppercase;margin-bottom:32px}
-#loadBar{width:min(280px,70vw);height:5px;background:#222;border-radius:3px;overflow:hidden}
-#loadBar>div{height:100%;width:0;background:linear-gradient(90deg,#c06020,#ffc070);transition:width .25s}
-#lobby{position:absolute;inset:0;display:none;flex-direction:column}
-#lobby.show{display:flex}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(180deg,rgba(0,0,0,.65),transparent);z-index:20}
-.player-card{display:flex;align-items:center;gap:10px;background:rgba(20,16,12,.75);border:1px solid rgba(255,160,60,.25);border-radius:12px;padding:6px 12px 6px 6px}
-.avatar{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#3a2a1a,#1a120c);border:1px solid rgba(255,160,60,.4);display:flex;align-items:center;justify-content:center;font-size:20px}
-.player-info{line-height:1.2}
-.player-name{font-weight:700;font-size:14px;color:#f0d0a0}
-.player-lvl{font-size:11px;color:#a08060}
-.currency-bar{display:flex;gap:10px;align-items:center}
-.curr{display:flex;align-items:center;gap:6px;background:rgba(20,16,12,.8);border:1px solid rgba(255,180,80,.2);border-radius:20px;padding:6px 12px;font-weight:700;font-size:14px}
-.curr.gold{color:#ffd070}
-.curr.ember{color:#ff8040}
-.top-icons{display:flex;gap:8px}
-.icon-btn{width:40px;height:40px;border-radius:10px;background:rgba(30,24,18,.8);border:1px solid rgba(255,160,60,.2);color:#e0c090;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.left-panel{position:absolute;left:12px;top:80px;display:flex;flex-direction:column;gap:10px;z-index:15;width:min(150px,28vw)}
-.side-card{background:rgba(18,14,10,.82);border:1px solid rgba(255,160,60,.22);border-radius:12px;padding:10px;cursor:pointer;transition:.2s;backdrop-filter:blur(12px)}
-.side-card:hover{border-color:rgba(255,180,80,.5);transform:translateX(4px)}
-.side-card .title{font-size:12px;font-weight:700;color:#ffc070;margin-bottom:4px}
-.side-card .desc{font-size:10px;color:#8a7060}
-.right-panel{position:absolute;right:12px;top:80px;display:flex;flex-direction:column;gap:10px;z-index:15;width:min(150px,28vw)}
-.right-btn{background:rgba(18,14,10,.82);border:1px solid rgba(255,160,60,.22);border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;transition:.2s;backdrop-filter:blur(12px);font-size:12px;font-weight:600;color:#e0c090}
-.right-btn:hover{border-color:rgba(255,180,80,.55);background:rgba(40,28,18,.9)}
-.right-btn .ico{font-size:22px;display:block;margin-bottom:4px}
-.bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);z-index:15}
-.play-btn{width:min(320px,85vw);height:56px;border:none;border-radius:14px;background:linear-gradient(180deg,#e89030,#c06018);color:#1a1008;font-size:18px;font-weight:800;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 24px rgba(255,140,40,.35),inset 0 1px 0 rgba(255,255,255,.25);transition:.2s;text-transform:uppercase}
-.play-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(255,140,40,.5)}
-.online{font-size:12px;color:#8a8070}
-.menu-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.mbtn-sm{padding:10px 18px;border-radius:10px;background:rgba(25,20,15,.85);border:1px solid rgba(255,160,60,.25);color:#d0b080;font-size:13px;font-weight:600;cursor:pointer}
-#hud{display:none;position:absolute;inset:0;pointer-events:none}
-#hud.show{display:block}
-.stat-bar{position:absolute;bottom:18px;left:14px;width:160px;height:10px;background:rgba(0,0,0,.55);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
-.stat-bar>div{height:100%;transition:width .25s}
-#hpBar{bottom:44px}#hpBar>div{background:linear-gradient(90deg,#c03020,#e05030)}
-#hungerBar{bottom:30px}#hungerBar>div{background:linear-gradient(90deg,#c07020,#e0a040)}
-#thirstBar{bottom:16px}#thirstBar>div{background:linear-gradient(90deg,#2060a0,#40a0e0)}
-#hotbar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
-.slot{width:52px;height:52px;background:rgba(15,12,10,.75);border:2px solid rgba(255,160,60,.22);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;position:relative}
-.slot.active{border-color:#ffb040;box-shadow:0 0 14px rgba(255,160,40,.35)}
-.slot .qty{position:absolute;bottom:1px;right:3px;font-size:10px;color:#fff}
-#crosshair{position:absolute;top:50%;left:50%;width:14px;height:14px;transform:translate(-50%,-50%)}
-#crosshair::before,#crosshair::after{content:'';position:absolute;background:#fff;opacity:.65}
-#crosshair::before{width:2px;height:100%;left:50%;transform:translateX(-50%)}
-#crosshair::after{height:2px;width:100%;top:50%;transform:translateY(-50%)}
-#fps{position:absolute;top:10px;left:10px;font-size:11px;color:#7a9a7a;opacity:.8}
-#eventLog{position:absolute;bottom:90px;left:14px;width:260px;max-height:120px;overflow:hidden;font-size:11px;color:#c8b090;pointer-events:none}
-#eventLog div{padding:1px 0;text-shadow:0 1px 2px #000}
-#mobileControls{display:none;position:absolute;inset:0;pointer-events:none}
-#joystickZone{position:absolute;bottom:24px;left:24px;width:130px;height:130px;pointer-events:auto}
-#joystickBase{width:130px;height:130px;border-radius:50%;background:rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.12);position:relative}
-#joystickKnob{width:54px;height:54px;border-radius:50%;background:rgba(255,170,70,.45);position:absolute;top:38px;left:38px;border:2px solid rgba(255,200,100,.5)}
-.mbtn{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(25,20,15,.75);border:2px solid rgba(255,150,50,.35);color:#f0d0a0;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:auto}
-#btnFire{bottom:30px;right:30px;width:74px;height:74px;background:rgba(110,35,15,.8);font-size:13px}
-#btnJump{bottom:115px;right:40px}
-#btnCrouch{bottom:30px;right:120px}
-#btnUse{bottom:115px;right:120px}
-#btnInv{top:16px;right:16px;width:46px;height:46px}
-#btnBuild{top:70px;right:16px;width:46px;height:46px}
-.panel{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(680px,94vw);max-height:82vh;overflow:auto;padding:22px;background:rgba(16,13,10,.92);border:1px solid rgba(255,160,60,.25);border-radius:16px;backdrop-filter:blur(20px);z-index:50}
-.panel.show{display:block}
-.panel-title{font-size:20px;font-weight:800;color:#ffc070;margin-bottom:14px;letter-spacing:1px}
-.close-x{position:absolute;top:10px;right:14px;font-size:26px;color:#999;background:none;border:none;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:7px}
-.inv-slot{width:60px;height:60px;background:rgba(0,0,0,.4);border:1px solid rgba(255,160,60,.18);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:#ccc}
-.btn{padding:12px 22px;font-size:14px;font-weight:600;color:#f5e6c8;background:linear-gradient(180deg,rgba(70,50,30,.95),rgba(35,25,15,.98));border:1px solid rgba(255,160,60,.35);border-radius:10px;cursor:pointer}
-.btn:hover{border-color:rgba(255,180,80,.6)}
-#rouletteStrip{height:110px;overflow:hidden;position:relative;margin:16px 0;border:2px solid rgba(255,160,40,.3);border-radius:8px}
-#rouletteInner{display:flex;height:100%}
-.skin-card{width:96px;height:100%;flex-shrink:0;margin:0 3px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;border:2px solid transparent}
-.common{background:#333;border-color:#666}
-.uncommon{background:#1a3a2a;border-color:#3a8a5a}
-.rare{background:#1a2a4a;border-color:#4a7ada}
-.epic{background:#3a1a4a;border-color:#9a4ada}
-.legendary{background:#4a2a0a;border-color:#da8a2a;box-shadow:0 0 12px rgba(255,160,40,.35)}
-#deathPanel{text-align:center}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="screen-orientation" content="landscape">
+  <title>EMBERHOLD: Остров Пепла</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Three.js r128 (CDN, без ES-модулей) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-<div id="loading">
-  <div class="logo-big">EMBERHOLD</div>
-  <div class="logo-sub">Остров Пепла</div>
-  <div id="loadBar"><div id="loadProgress"></div></div>
-</div>
-<canvas id="c"></canvas>
-<div id="ui">
-  <div id="lobby">
-    <div class="topbar">
-      <div class="player-card">
-        <div class="avatar">EH</div>
-        <div class="player-info">
-          <div class="player-name">Выживший</div>
-          <div class="player-lvl">Ур. 1 · Emberhold</div>
+  <!-- Портрет -->
+  <div id="rotate-msg">
+    <svg viewBox="0 0 24 24"><path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/></svg>
+    <div style="font-size:18px;font-weight:700;">Поверни телефон</div>
+    <div style="font-size:13px;color:#a89a8a;">Игра работает только в ландшафте</div>
+  </div>
+
+  <div id="app">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Loading -->
+    <div id="loading-screen">
+      <div class="logo">EMBERHOLD</div>
+      <div class="logo-sub">Остров Пепла</div>
+      <div class="progress-bar"><div class="progress-fill" id="load-progress"></div></div>
+      <div class="loading-text" id="load-text">Инициализация…</div>
+    </div>
+
+    <!-- Lobby UI -->
+    <div id="lobby-ui">
+      <div class="top-bar">
+        <div class="profile-card">
+          <div class="avatar">⚔️</div>
+          <div class="profile-info">
+            <div class="profile-nick" id="profile-nick">AshWalker</div>
+            <div class="profile-rank" id="profile-rank">Ур. 12 · Охотник</div>
+          </div>
+        </div>
+        <div class="currency-bar">
+          <div class="currency-item">
+            <svg viewBox="0 0 24 24" fill="#ffcc44"><circle cx="12" cy="12" r="10"/></svg>
+            <span id="cur-coins">1 250</span>
+          </div>
+          <div class="currency-item">
+            <svg viewBox="0 0 24 24" fill="#ff6b2c"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span id="cur-crystals">0</span>
+          </div>
+        </div>
+        <div class="top-icons">
+          <div class="icon-btn" id="btn-pass" title="Боевой пропуск">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          </div>
+          <div class="icon-btn" id="btn-mail" title="Почта">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </div>
+          <div class="icon-btn" id="btn-settings" title="Настройки">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </div>
         </div>
       </div>
-      <div class="currency-bar">
-        <div class="curr gold">G <span id="coins">150</span></div>
-        <div class="curr ember">E <span id="embers">0</span></div>
+
+      <div class="left-banners">
+        <div class="banner">
+          <div class="banner-title">Ежедневная награда</div>
+          <div class="banner-timer">Сброс через 6ч 12м</div>
+        </div>
+        <div class="banner">
+          <div class="banner-title">Сезон «Пепел»</div>
+          <div class="banner-timer">Осталось 18 дней</div>
+        </div>
       </div>
-      <div class="top-icons"><div class="icon-btn" id="btnSettingsTop">S</div></div>
-    </div>
-    <div class="left-panel">
-      <div class="side-card" id="btnShop"><div class="title">КУЗНИЦА</div><div class="desc">Магазин и акции</div></div>
-      <div class="side-card" id="btnCases"><div class="title">КЕЙСЫ</div><div class="desc">Рулетка скинов</div></div>
-      <div class="side-card" id="btnDaily"><div class="title">НАГРАДЫ</div><div class="desc">Ежедневный бонус</div></div>
-    </div>
-    <div class="right-panel">
-      <div class="right-btn" id="btnMissions"><span class="ico">M</span>Миссии</div>
-      <div class="right-btn" id="btnSkins"><span class="ico">K</span>Скины</div>
-      <div class="right-btn" id="btnClans"><span class="ico">C</span>Кланы</div>
-      <div class="right-btn" id="btnInventoryLobby"><span class="ico">I</span>Инвентарь</div>
-    </div>
-    <div class="bottom-bar">
-      <button class="play-btn" id="btnPlay">ИГРАТЬ</button>
-      <div class="online" id="onlineCount">Онлайн: —</div>
-      <div class="menu-row">
-        <button class="mbtn-sm" id="btnSettings">Настройки</button>
-        <button class="mbtn-sm" id="btnExit">Выход</button>
+
+      <div class="right-tiles">
+        <div class="tile-btn" id="btn-missions">Миссии</div>
+        <div class="tile-btn" id="btn-skins">Скины</div>
+        <div class="tile-btn" id="btn-clans">Кланы</div>
+        <div class="tile-btn" id="btn-roulette">Рулетка</div>
+      </div>
+
+      <div class="continue-wrap">
+        <button class="btn-continue" id="btn-continue">Продолжить</button>
+        <div class="island-label" id="island-label">Остров #47</div>
+      </div>
+
+      <div class="bottom-bar">
+        <div><span class="online-dot"></span><span id="online-count">1 248</span> ONLINE</div>
+        <div>v0.1.0 · Этап 1</div>
       </div>
     </div>
-  </div>
-  <div id="hud">
-    <div id="fps">60 FPS</div>
-    <div id="crosshair"></div>
-    <div class="stat-bar" id="hpBar"><div id="hpFill" style="width:100%"></div></div>
-    <div class="stat-bar" id="hungerBar"><div id="hungerFill" style="width:100%"></div></div>
-    <div class="stat-bar" id="thirstBar"><div id="thirstFill" style="width:100%"></div></div>
-    <div id="hotbar"></div>
-    <div id="eventLog"></div>
-  </div>
-  <div id="mobileControls">
-    <div id="joystickZone"><div id="joystickBase"><div id="joystickKnob"></div></div></div>
-    <button class="mbtn" id="btnFire">ОГОНЬ</button>
-    <button class="mbtn" id="btnJump">ПРЫЖОК</button>
-    <button class="mbtn" id="btnCrouch">ПРИСЕД</button>
-    <button class="mbtn" id="btnUse">E</button>
-    <button class="mbtn" id="btnInv">ИНВ</button>
-    <button class="mbtn" id="btnBuild">СТРОЙ</button>
-  </div>
-  <div class="panel" id="inventoryPanel">
-    <button class="close-x" data-close="inventoryPanel">×</button>
-    <div class="panel-title">Инвентарь</div>
-    <div class="grid" id="invGrid"></div>
-  </div>
-  <div class="panel" id="craftPanel">
-    <button class="close-x" data-close="craftPanel">×</button>
-    <div class="panel-title">Крафт</div>
-    <div id="craftList" style="display:flex;flex-direction:column;gap:8px"></div>
-  </div>
-  <div class="panel" id="roulettePanel">
-    <button class="close-x" data-close="roulettePanel">×</button>
-    <div class="panel-title">Рулетка скинов</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-      <button class="btn" data-case="cheap">Обычный · 50</button>
-      <button class="btn" data-case="mid">Редкий · 200</button>
-      <button class="btn" data-case="high">Легендарный · 800</button>
+
+    <!-- Settings modal -->
+    <div class="modal-overlay" id="modal-settings">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Настройки</div>
+          <button class="modal-close">×</button>
+        </div>
+        <div id="settings-body"></div>
+      </div>
     </div>
-    <div id="rouletteStrip"><div id="rouletteInner"></div></div>
-    <div id="rouletteResult" style="text-align:center;font-size:16px;min-height:24px;color:#ffc070"></div>
-  </div>
-  <div class="panel" id="settingsPanel">
-    <button class="close-x" data-close="settingsPanel">×</button>
-    <div class="panel-title">Настройки</div>
-    <div style="display:flex;flex-direction:column;gap:12px;font-size:14px">
-      <label>Графика: <select id="setQuality"><option>Low</option><option selected>Medium</option><option>High</option><option>Ultra</option></select></label>
-      <label>FOV: <input type="range" id="setFov" min="60" max="110" value="75"></label>
-      <label>Чувствительность: <input type="range" id="setSens" min="0.5" max="3" step="0.1" value="1.2"></label>
-      <label>Громкость: <input type="range" id="setVol" min="0" max="1" step="0.05" value="0.7"></label>
-      <label><input type="checkbox" id="setFps" checked> Показывать FPS</label>
-      <button class="btn" id="btnReset">Сброс прогресса</button>
+
+    <!-- Roulette modal -->
+    <div class="modal-overlay" id="modal-roulette">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Рулетка</div>
+          <button class="modal-close">×</button>
+        </div>
+        <div id="roulette-body"></div>
+      </div>
     </div>
+
+    <!-- Skins modal -->
+    <div class="modal-overlay" id="modal-skins">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Инвентарь скинов</div>
+          <button class="modal-close">×</button>
+        </div>
+        <div id="skins-body"></div>
+      </div>
+    </div>
+
+    <!-- Gyro enable prompt -->
+    <div id="gyro-prompt">
+      <div style="font-size:22px;font-weight:800;color:#ff9a3c;">Гироскоп</div>
+      <p>Для прицеливания наклоном телефона нужно разрешить доступ к датчикам движения.</p>
+      <button class="btn-continue" id="btn-gyro-prompt" style="min-width:200px;padding:12px 24px;font-size:15px;">Включить гироскоп</button>
+      <button class="btn-small" id="btn-gyro-skip" style="margin-top:8px;">Позже</button>
+    </div>
+
+    <!-- Calibration screen -->
+    <div id="calib-screen">
+      <div class="calib-step-num" id="calib-step-num">1</div>
+      <div class="calib-instruction" id="calib-instruction">Медленно поверни телефон вправо…</div>
+      <div class="calib-crosshair">
+        <div class="calib-dot" id="calib-dot"></div>
+      </div>
+      <div class="calib-rates" id="calib-rates">yaw: 0.0  pitch: 0.0</div>
+      <button class="btn-calib" id="btn-calib-next">Далее</button>
+    </div>
+
+    <div class="version-tag">EMBERHOLD v0.1.0-stage1</div>
   </div>
-  <div class="panel" id="deathPanel">
-    <div class="panel-title" style="color:#e05040">Ты погиб</div>
-    <div id="deathReason" style="margin:10px 0;color:#c0a080"></div>
-    <button class="btn" id="btnRespawn">Респаун</button>
-    <button class="btn" id="btnRespawnRandom" style="margin-top:8px">Случайная точка</button>
-  </div>
-</div>
-<script type="importmap">
-{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}
-</script>
-<script type="module" src="game.js"></script>
+
+  <!-- Scripts (порядок важен) -->
+  <script src="data.js"></script>
+  <script src="gyro.js"></script>
+  <script src="lobby.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    (function () {
+      const progress = document.getElementById('load-progress');
+      const loadText = document.getElementById('load-text');
+      const loading = document.getElementById('loading-screen');
+      const lobbyUI = document.getElementById('lobby-ui');
+
+      function setProgress(p, text) {
+        if (progress) progress.style.width = p + '%';
+        if (loadText) loadText.textContent = text;
+      }
+
+      let p = 0;
+      const steps = [
+        { p: 15, t: 'Загрузка ядра…' },
+        { p: 35, t: 'Инициализация 3D…' },
+        { p: 55, t: 'Построение сцены…' },
+        { p: 75, t: 'Подготовка UI…' },
+        { p: 90, t: 'Проверка датчиков…' },
+        { p: 100, t: 'Готово' }
+      ];
+      let i = 0;
+
+      function nextStep() {
+        if (i >= steps.length) {
+          finishLoad();
+          return;
+        }
+        const s = steps[i++];
+        setProgress(s.p, s.t);
+        setTimeout(nextStep, 280 + Math.random() * 200);
+      }
+
+      function finishLoad() {
+        const canvas = document.getElementById('game-canvas');
+        Lobby.init(canvas);
+        UI.init();
+        Lobby.start();
+
+        setInterval(() => {
+          const el = document.getElementById('online-count');
+          if (el) {
+            const base = 1200 + Math.floor(Math.random() * 80);
+            el.textContent = base.toLocaleString();
+          }
+        }, 8000);
+
+        setTimeout(() => {
+          loading.classList.add('hidden');
+          lobbyUI.classList.add('visible');
+
+          const saved = Save.load();
+          if (!saved || !saved.gyroPromptShown) {
+            setTimeout(() => {
+              document.getElementById('gyro-prompt')?.classList.add('open');
+              const st = Save.load() || {};
+              st.gyroPromptShown = true;
+              Save.save(st);
+            }, 800);
+          }
+        }, 400);
+      }
+
+      document.getElementById('btn-gyro-prompt')?.addEventListener('click', async () => {
+        await UI.requestGyroPermission();
+      });
+      document.getElementById('btn-gyro-skip')?.addEventListener('click', () => {
+        document.getElementById('gyro-prompt')?.classList.remove('open');
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          Gyro.stop();
+        } else if (Gyro.permissionGranted && Gyro.mode !== 'off') {
+          Gyro.start();
+        }
+      });
+
+      setProgress(5, 'Старт…');
+      setTimeout(nextStep, 200);
+    })();
+  </script>
 </body>
 </html>
